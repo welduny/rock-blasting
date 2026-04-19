@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Engineering Calculator Pro FINAL</title>
+<style>
+body{font-family:Arial;background:#0f172a;color:white;padding:20px}
+h1{text-align:center}
+.menu button{margin:5px;padding:10px;border:none;border-radius:5px;background:#38bdf8;cursor:pointer}
+.card{display:none;background:#1e293b;padding:15px;margin:15px 0;border-radius:10px}
+input,select{margin:5px;padding:8px;border-radius:5px;border:none}
+button.calc{margin-top:10px}
+.result{margin-top:10px;font-weight:bold}
+.active{display:block}
+.warn{color:#facc15}
+.danger{color:#ef4444}
+.good{color:#22c55e}
+</style>
+</head>
+<body>
+
+<h1>⚙️ Engineering Calculator Pro FINAL</h1>
+
+<div class="menu">
+<button onclick="show('blasting')">Rock Blasting</button>
+<button onclick="show('slope')">Slope Stability</button>
+<button onclick="show('analysis')">Sensitivity</button>
+<button onclick="show('history')">History</button>
+</div>
+
+<!-- BLASTING -->
+<div id="blasting" class="card active">
+<h2>💣 Rock Blasting</h2>
+
+<h3>Powder Factor</h3>
+<input id="pf_w" placeholder="Berat (kg)">
+<input id="pf_v" placeholder="Volume (m3)">
+<button class="calc" onclick="calcPF()">Hitung</button>
+<p id="pf_result" class="result"></p>
+
+<h3>PPV</h3>
+<input id="ppv_d" placeholder="Jarak (m)">
+<input id="ppv_w" placeholder="Charge (kg)">
+<input id="ppv_k" placeholder="k">
+<input id="ppv_n" placeholder="n">
+<button class="calc" onclick="calcPPV()">Hitung</button>
+<p id="ppv_result" class="result"></p>
+</div>
+
+<!-- SLOPE -->
+<div id="slope" class="card">
+<h2>⛰️ Slope Stability</h2>
+
+<select id="kondisi">
+<option value="1">Kering</option>
+<option value="0.8">Basah</option>
+<option value="0.6">Jenuh</option>
+</select>
+
+<h3>Factor of Safety</h3>
+<input id="fos_r" placeholder="Gaya Penahan">
+<input id="fos_d" placeholder="Gaya Penggerak">
+<button class="calc" onclick="calcFoS()">Hitung</button>
+<p id="fos_result" class="result"></p>
+</div>
+
+<!-- SENSITIVITY -->
+<div id="analysis" class="card">
+<h2>📊 Sensitivity Analysis</h2>
+<input id="base" placeholder="Nilai Awal">
+<button onclick="simulate()">Simulasi ±10%</button>
+<p id="sim_result" class="result"></p>
+</div>
+
+<!-- HISTORY -->
+<div id="history" class="card">
+<h2>📁 History</h2>
+<ul id="history_list"></ul>
+</div>
+
+<script>
+function show(menu){
+ document.querySelectorAll('.card').forEach(c=>c.classList.remove('active'));
+ document.getElementById(menu).classList.add('active');
+}
+
+function valid(a){return !isNaN(a)&&a>0}
+
+function save(text){
+ let data=JSON.parse(localStorage.getItem('his')||"[]");
+ data.push(text);
+ localStorage.setItem('his',JSON.stringify(data));
+ render();
+}
+
+function render(){
+ let data=JSON.parse(localStorage.getItem('his')||"[]");
+ history_list.innerHTML="";
+ data.forEach(x=>{
+ let li=document.createElement('li');
+ li.innerText=x;
+ history_list.appendChild(li);
+ });
+}
+
+function calcPF(){
+ let w=parseFloat(pf_w.value),v=parseFloat(pf_v.value);
+ if(!valid(w)||!valid(v)) return pf_result.innerText="Input salah";
+ let pf=w/v;
+ let msg="";
+ if(pf<0.5) msg="⚠️ Fragmentasi kasar";
+ else if(pf>1.2) msg="⚠️ Boros & getaran tinggi";
+ else msg="✅ Optimal";
+ pf_result.innerText=`PF=${pf.toFixed(2)} ${msg}`;
+ save(`PF ${pf.toFixed(2)} ${msg}`);
+}
+
+function calcPPV(){
+ let D=parseFloat(ppv_d.value),W=parseFloat(ppv_w.value),k=parseFloat(ppv_k.value),n=parseFloat(ppv_n.value);
+ if(!valid(D)||!valid(W)||!valid(k)||!valid(n)) return ppv_result.innerText="Input salah";
+ let val=k*Math.pow(D/Math.sqrt(W),-n);
+ let msg=val>10?"⚠️ Berbahaya untuk struktur":"✅ Aman";
+ ppv_result.innerText=`PPV=${val.toFixed(2)} ${msg}`;
+ save(`PPV ${val.toFixed(2)} ${msg}`);
+}
+
+function calcFoS(){
+ let r=parseFloat(fos_r.value),d=parseFloat(fos_d.value);
+ let faktor=parseFloat(kondisi.value);
+ if(!valid(r)||!valid(d)) return fos_result.innerText="Input salah";
+ let fos=(r/d)*faktor;
+ let msg="";
+ if(fos<1) msg="❌ Tidak stabil (STOP)";
+ else if(fos<1.3) msg="⚠️ Kritis";
+ else msg="✅ Aman";
+ fos_result.innerText=`FoS=${fos.toFixed(2)} ${msg}`;
+ save(`FoS ${fos.toFixed(2)} ${msg}`);
+}
+
+function simulate(){
+ let baseVal=parseFloat(base.value);
+ if(!valid(baseVal)) return sim_result.innerText="Input salah";
+ let up=baseVal*1.1;
+ let down=baseVal*0.9;
+ sim_result.innerText=`-10%=${down.toFixed(2)}, +10%=${up.toFixed(2)}`;
+}
+
+render();
+</script>
+
+</body>
+</html>
