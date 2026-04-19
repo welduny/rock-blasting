@@ -29,7 +29,7 @@ button.calc{margin-top:10px}
 </head>
 <body>
 
-<h1>⚙️ Engineering Calculator Pro FINAL</h1>
+<h1> Engineering Calculator</h1>
 
 <div class="menu">
 <button onclick="show('blasting')">Rock Blasting</button>
@@ -40,7 +40,7 @@ button.calc{margin-top:10px}
 
 <!-- BLASTING -->
 <div id="blasting" class="card active">
-<h2>💣 Rock Blasting</h2>
+<h2> Rock Blasting</h2>
 
 <h3>Powder Factor</h3>
 <input id="pf_w" placeholder="Berat (kg)">
@@ -59,7 +59,7 @@ button.calc{margin-top:10px}
 
 <!-- SLOPE -->
 <div id="slope" class="card">
-<h2>⛰️ Slope Stability</h2>
+<h2>Slope Stability</h2>
 
 <select id="kondisi">
 <option value="1">Kering</option>
@@ -76,15 +76,22 @@ button.calc{margin-top:10px}
 
 <!-- SENSITIVITY -->
 <div id="analysis" class="card">
-<h2>📊 Sensitivity Analysis</h2>
-<input id="base" placeholder="Nilai Awal">
-<button onclick="simulate()">Simulasi ±10%</button>
-<p id="sim_result" class="result"></p>
+<h2> Sensitivity Analysis</h2>
+
+<h3>For Rock Blasting</h3>
+<input id="base_blasting" placeholder="Nilai Awal">
+<button onclick="simulateBlasting()">Simulasi ±10%</button>
+<p id="sim_result_blasting" class="result"></p>
+
+<h3>For Slope Stability</h3>
+<input id="base_slope" placeholder="Nilai Awal">
+<button onclick="simulateSlope()">Simulasi ±10%</button>
+<p id="sim_result_slope" class="result"></p>
 </div>
 
 <!-- HISTORY -->
 <div id="history" class="card">
-<h2>📁 History</h2>
+<h2> History</h2>
 <ul id="history_list"></ul>
 </div>
 
@@ -147,12 +154,20 @@ function calcFoS(){
  save(`FoS ${fos.toFixed(2)} ${msg}`);
 }
 
-function simulate(){
- let baseVal=parseFloat(base.value);
- if(!valid(baseVal)) return sim_result.innerText="Input salah";
+function simulateBlasting(){
+ let baseVal=parseFloat(base_blasting.value);
+ if(!valid(baseVal)) return sim_result_blasting.innerText="Input salah";
  let up=baseVal*1.1;
  let down=baseVal*0.9;
- sim_result.innerText=`-10%=${down.toFixed(2)}, +10%=${up.toFixed(2)}`;
+ sim_result_blasting.innerText=`-10%=${down.toFixed(2)}, +10%=${up.toFixed(2)}`;
+}
+
+function simulateSlope(){
+ let baseVal=parseFloat(base_slope.value);
+ if(!valid(baseVal)) return sim_result_slope.innerText="Input salah";
+ let up=baseVal*1.1;
+ let down=baseVal*0.9;
+ sim_result_slope.innerText=`-10%=${down.toFixed(2)}, +10%=${up.toFixed(2)}`;
 }
 
 render();
