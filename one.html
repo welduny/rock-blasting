@@ -3,171 +3,806 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Engineering Calculator</title>
-<style>
-body{font-family:Arial;background:#0f172a;color:white;padding:20px}
-h1{text-align:center}
-.menu{display:flex;flex-wrap:wrap;justify-content:center}
-.menu button{margin:5px;padding:10px;border:none;border-radius:5px;background:#38bdf8;cursor:pointer;flex:1 1 200px;max-width:200px}
-.card{display:none;background:#1e293b;padding:15px;margin:15px 0;border-radius:10px}
-input,select{margin:5px;padding:8px;border-radius:5px;border:none;width:100%;box-sizing:border-box}
-button.calc{margin-top:10px}
-.result{margin-top:10px;font-weight:bold}
-.active{display:block}
-.warn{color:#facc15}
-.danger{color:#ef4444}
-.good{color:#22c55e}
+<title>Engineering Calculator Pro FINAL</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@400;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 
-@media (max-width: 768px) {
-  body { padding: 10px; }
-  h1 { font-size: 1.5em; }
-  .menu button { flex: 1 1 45%; max-width: none; }
-  .card { margin: 10px 0; padding: 10px; }
-  input, select { margin: 5px 0; }
+<style>
+:root{
+  --bg-primary:#070b14;
+  --bg-secondary:#0f172a;
+  --bg-card:#111827;
+  --bg-input:#1f2937;
+  --accent:#f59e0b;
+  --accent-glow:rgba(245,158,11,0.3);
+  --cyan:#06b6d4;
+  --cyan-glow:rgba(6,182,212,0.3);
+  --green:#10b981;
+  --green-glow:rgba(16,185,129,0.3);
+  --red:#ef4444;
+  --red-glow:rgba(239,68,68,0.3);
+  --yellow:#eab308;
+  --text-primary:#f1f5f9;
+  --text-secondary:#94a3b8;
+  --border:#1e293b;
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+
+body{
+  font-family:'Rajdhani',sans-serif;
+  background:var(--bg-primary);
+  color:var(--text-primary);
+  min-height:100vh;
+  padding:20px;
+  background-image:
+    radial-gradient(circle at 20% 50%,rgba(6,182,212,0.05) 0%,transparent 50%),
+    radial-gradient(circle at 80% 80%,rgba(245,158,11,0.05) 0%,transparent 50%);
+}
+
+/* Header */
+.header{
+  text-align:center;
+  padding:30px 20px;
+  margin-bottom:20px;
+  border-bottom:1px solid var(--border);
+  position:relative;
+}
+
+.header::after{
+  content:'';
+  position:absolute;
+  bottom:-1px;
+  left:50%;
+  transform:translateX(-50%);
+  width:200px;
+  height:2px;
+  background:linear-gradient(90deg,transparent,var(--accent),transparent);
+}
+
+.header h1{
+  font-family:'Orbitron',sans-serif;
+  font-size:1.8rem;
+  font-weight:700;
+  letter-spacing:3px;
+  text-transform:uppercase;
+  background:linear-gradient(135deg,var(--text-primary),var(--accent));
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+  background-clip:text;
+}
+
+.header .subtitle{
+  font-size:0.85rem;
+  color:var(--text-secondary);
+  letter-spacing:4px;
+  text-transform:uppercase;
+  margin-top:8px;
+}
+
+/* Navigation */
+.nav{
+  display:flex;
+  justify-content:center;
+  flex-wrap:wrap;
+  gap:10px;
+  margin-bottom:30px;
+  padding:0 10px;
+}
+
+.nav button{
+  font-family:'Rajdhani',sans-serif;
+  font-weight:600;
+  font-size:0.9rem;
+  letter-spacing:1px;
+  text-transform:uppercase;
+  padding:12px 24px;
+  border:1px solid var(--border);
+  border-radius:6px;
+  background:var(--bg-card);
+  color:var(--text-secondary);
+  cursor:pointer;
+  transition:all 0.3s ease;
+  position:relative;
+  overflow:hidden;
+}
+
+.nav button::before{
+  content:'';
+  position:absolute;
+  top:0;
+  left:-100%;
+  width:100%;
+  height:100%;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,0.05),transparent);
+  transition:left 0.5s;
+}
+
+.nav button:hover::before{
+  left:100%;
+}
+
+.nav button:hover{
+  border-color:var(--cyan);
+  color:var(--cyan);
+  box-shadow:0 0 15px var(--cyan-glow);
+  transform:translateY(-2px);
+}
+
+.nav button.active{
+  border-color:var(--accent);
+  color:var(--accent);
+  box-shadow:0 0 20px var(--accent-glow),inset 0 0 10px var(--accent-glow);
+  background:linear-gradient(135deg,var(--bg-card),rgba(245,158,11,0.1));
+}
+
+/* Cards */
+.card{
+  display:none;
+  max-width:900px;
+  margin:0 auto 20px;
+  background:var(--bg-card);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:30px;
+  position:relative;
+  overflow:hidden;
+}
+
+.card::before{
+  content:'';
+  position:absolute;
+  top:0;
+  left:0;
+  width:100%;
+  height:3px;
+  background:linear-gradient(90deg,var(--cyan),var(--accent));
+}
+
+.card.active{
+  display:block;
+  animation:fadeIn 0.4s ease;
+}
+
+@keyframes fadeIn{
+  from{opacity:0;transform:translateY(10px)}
+  to{opacity:1;transform:translateY(0)}
+}
+
+.card h2{
+  font-family:'Orbitron',sans-serif;
+  font-size:1.2rem;
+  letter-spacing:2px;
+  text-transform:uppercase;
+  margin-bottom:25px;
+  padding-bottom:15px;
+  border-bottom:1px solid var(--border);
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+
+.card h2::before{
+  content:'';
+  display:inline-block;
+  width:8px;
+  height:8px;
+  background:var(--accent);
+  border-radius:2px;
+  box-shadow:0 0 10px var(--accent-glow);
+}
+
+/* Input Grid */
+.input-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+  gap:15px;
+  margin-bottom:20px;
+}
+
+.input-group{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+
+.input-group label{
+  font-size:0.75rem;
+  text-transform:uppercase;
+  letter-spacing:1.5px;
+  color:var(--text-secondary);
+  font-weight:600;
+}
+
+input,select{
+  font-family:'Share Tech Mono',monospace;
+  font-size:0.95rem;
+  padding:12px 15px;
+  border:1px solid var(--border);
+  border-radius:6px;
+  background:var(--bg-input);
+  color:var(--text-primary);
+  outline:none;
+  transition:all 0.3s ease;
+}
+
+input:focus,select:focus{
+  border-color:var(--cyan);
+  box-shadow:0 0 15px var(--cyan-glow);
+}
+
+input::placeholder{
+  color:#4b5563;
+}
+
+/* Buttons */
+.btn-calc{
+  font-family:'Rajdhani',sans-serif;
+  font-weight:700;
+  font-size:1rem;
+  letter-spacing:2px;
+  text-transform:uppercase;
+  padding:14px 40px;
+  border:none;
+  border-radius:6px;
+  background:linear-gradient(135deg,var(--accent),#d97706);
+  color:#000;
+  cursor:pointer;
+  transition:all 0.3s ease;
+  position:relative;
+  overflow:hidden;
+  margin-top:10px;
+}
+
+.btn-calc::after{
+  content:'';
+  position:absolute;
+  top:-50%;
+  left:-50%;
+  width:200%;
+  height:200%;
+  background:linear-gradient(45deg,transparent,rgba(255,255,255,0.3),transparent);
+  transform:rotate(45deg);
+  transition:all 0.5s;
+}
+
+.btn-calc:hover::after{
+  left:100%;
+}
+
+.btn-calc:hover{
+  transform:translateY(-2px);
+  box-shadow:0 10px 30px var(--accent-glow);
+}
+
+/* Result Box */
+.result-box{
+  margin-top:25px;
+  padding:20px;
+  background:var(--bg-secondary);
+  border:1px solid var(--border);
+  border-radius:8px;
+  border-left:4px solid var(--cyan);
+  font-family:'Share Tech Mono',monospace;
+  font-size:1rem;
+  line-height:1.6;
+  position:relative;
+  overflow:hidden;
+}
+
+.result-box::before{
+  content:'';
+  position:absolute;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  background:linear-gradient(90deg,var(--cyan-glow),transparent);
+  opacity:0.1;
+  pointer-events:none;
+}
+
+/* Status Badges */
+.badge{
+  display:inline-block;
+  padding:4px 12px;
+  border-radius:4px;
+  font-family:'Rajdhani',sans-serif;
+  font-weight:700;
+  font-size:0.8rem;
+  letter-spacing:1px;
+  text-transform:uppercase;
+  margin-left:10px;
+}
+
+.badge-safe{
+  background:rgba(16,185,129,0.15);
+  color:var(--green);
+  border:1px solid var(--green);
+  box-shadow:0 0 10px var(--green-glow);
+}
+
+.badge-critical{
+  background:rgba(234,179,8,0.15);
+  color:var(--yellow);
+  border:1px solid var(--yellow);
+  box-shadow:0 0 10px rgba(234,179,8,0.2);
+}
+
+.badge-danger{
+  background:rgba(239,68,68,0.15);
+  color:var(--red);
+  border:1px solid var(--red);
+  box-shadow:0 0 10px var(--red-glow);
+}
+
+.badge-optimal{
+  background:rgba(6,182,212,0.15);
+  color:var(--cyan);
+  border:1px solid var(--cyan);
+  box-shadow:0 0 10px var(--cyan-glow);
+}
+
+/* Canvas */
+.chart-container{
+  margin-top:25px;
+  padding:20px;
+  background:#0a0f1a;
+  border:1px solid var(--border);
+  border-radius:8px;
+}
+
+canvas{
+  max-height:400px;
+}
+
+/* History */
+.history-list{
+  list-style:none;
+  max-height:400px;
+  overflow-y:auto;
+}
+
+.history-list li{
+  padding:12px 15px;
+  margin-bottom:8px;
+  background:var(--bg-input);
+  border:1px solid var(--border);
+  border-radius:6px;
+  font-family:'Share Tech Mono',monospace;
+  font-size:0.9rem;
+  border-left:3px solid var(--accent);
+  transition:all 0.3s ease;
+}
+
+.history-list li:hover{
+  border-color:var(--cyan);
+  transform:translateX(5px);
+}
+
+/* Scrollbar */
+::-webkit-scrollbar{
+  width:8px;
+}
+
+::-webkit-scrollbar-track{
+  background:var(--bg-primary);
+}
+
+::-webkit-scrollbar-thumb{
+  background:var(--border);
+  border-radius:4px;
+}
+
+::-webkit-scrollbar-thumb:hover{
+  background:var(--accent);
+}
+
+/* Responsive */
+@media(max-width:600px){
+  .header h1{font-size:1.3rem}
+  .nav button{padding:10px 16px;font-size:0.8rem}
+  .card{padding:20px}
+  .input-grid{grid-template-columns:1fr}
+}
+
+/* Mode selector */
+.mode-select{
+  margin-bottom:20px;
+}
+
+.mode-select select{
+  width:100%;
+  max-width:300px;
 }
 </style>
 </head>
+
 <body>
 
-<h1> Engineering Calculator</h1>
+<div class="header">
+  <h1>Engineering Calculator Pro</h1>
+  <div class="subtitle">Rock Blasting & Slope Analysis Suite</div>
+</div>
 
-<div class="menu">
-<button onclick="show('blasting')">Rock Blasting</button>
-<button onclick="show('slope')">Slope Stability</button>
-<button onclick="show('analysis')">Sensitivity</button>
-<button onclick="show('history')">History</button>
+<div class="nav">
+  <button onclick="show('blasting')" id="btn-blasting" class="active">Rock Blasting</button>
+  <button onclick="show('fs_rumus')" id="btn-fs_rumus">FS (Rumus Tanah)</button>
+  <button onclick="show('slope')" id="btn-slope">Slope Stability</button>
+  <button onclick="show('analysis')" id="btn-analysis">Sensitivity</button>
+  <button onclick="show('history')" id="btn-history">History</button>
 </div>
 
 <!-- BLASTING -->
 <div id="blasting" class="card active">
-<h2> Rock Blasting</h2>
+  <h2>Rock Blasting</h2>
+  <div class="input-grid">
+    <div class="input-group">
+      <label>Tinggi Bench</label>
+      <input id="H_blast" placeholder="m">
+    </div>
+    <div class="input-group">
+      <label>Diameter</label>
+      <input id="D" placeholder="mm">
+    </div>
+    <div class="input-group">
+      <label>Burden</label>
+      <input id="B" placeholder="m">
+    </div>
+    <div class="input-group">
+      <label>Spacing</label>
+      <input id="S" placeholder="m">
+    </div>
+    <div class="input-group">
+      <label>Panjang Lubang</label>
+      <input id="L" placeholder="m">
+    </div>
+    <div class="input-group">
+      <label>Stemming</label>
+      <input id="T" placeholder="m">
+    </div>
+    <div class="input-group">
+      <label>Density ANFO</label>
+      <input id="dens" placeholder="g/cc">
+    </div>
+    <div class="input-group">
+      <label>Jumlah Lubang</label>
+      <input id="holes" placeholder="pcs">
+    </div>
+  </div>
+  <button class="btn-calc" onclick="calcBlastFull()">Hitung</button>
+  <div id="blast_result" class="result-box" style="display:none"></div>
+</div>
 
-<h3>Powder Factor</h3>
-<input id="pf_w" placeholder="Berat (kg)">
-<input id="pf_v" placeholder="Volume (m3)">
-<button class="calc" onclick="calcPF()">Hitung</button>
-<p id="pf_result" class="result"></p>
-
-<h3>PPV</h3>
-<input id="ppv_d" placeholder="Jarak (m)">
-<input id="ppv_w" placeholder="Charge (kg)">
-<input id="ppv_k" placeholder="k">
-<input id="ppv_n" placeholder="n">
-<button class="calc" onclick="calcPPV()">Hitung</button>
-<p id="ppv_result" class="result"></p>
+<!-- FS RUMUS -->
+<div id="fs_rumus" class="card">
+  <h2>Factor of Safety (Rumus Tanah)</h2>
+  <div class="input-grid">
+    <div class="input-group">
+      <label>γ (Gamma)</label>
+      <input id="fs_gamma" placeholder="kN/m³">
+    </div>
+    <div class="input-group">
+      <label>c (Kohesi)</label>
+      <input id="fs_c" placeholder="kPa">
+    </div>
+    <div class="input-group">
+      <label>φ (Phi)</label>
+      <input id="fs_phi" placeholder="derajat">
+    </div>
+    <div class="input-group">
+      <label>H (Tinggi)</label>
+      <input id="fs_H" placeholder="m">
+    </div>
+    <div class="input-group">
+      <label>α (Alpha)</label>
+      <input id="fs_alpha" placeholder="derajat">
+    </div>
+  </div>
+  <button class="btn-calc" onclick="hitungFSRumus()">Hitung</button>
+  <div id="fs_rumus_result" class="result-box" style="display:none"></div>
 </div>
 
 <!-- SLOPE -->
 <div id="slope" class="card">
-<h2>Slope Stability</h2>
+  <h2>Slope Stability</h2>
+  <div class="mode-select">
+    <div class="input-group">
+      <label>Metode Perhitungan</label>
+      <select id="mode">
+        <option value="simple">Metode Gaya</option>
+        <option value="advanced">Metode Parameter Tanah</option>
+      </select>
+    </div>
+  </div>
 
-<select id="kondisi">
-<option value="1">Kering</option>
-<option value="0.8">Basah</option>
-<option value="0.6">Jenuh</option>
-</select>
+  <div id="simpleMode">
+    <div class="input-grid">
+      <div class="input-group">
+        <label>Gaya Penahan</label>
+        <input id="fos_r" placeholder="kN">
+      </div>
+      <div class="input-group">
+        <label>Gaya Penggerak</label>
+        <input id="fos_d" placeholder="kN">
+      </div>
+    </div>
+  </div>
 
-<h3>Factor of Safety</h3>
-<input id="fos_r" placeholder="Gaya Penahan">
-<input id="fos_d" placeholder="Gaya Penggerak">
-<button class="calc" onclick="calcFoS()">Hitung</button>
-<p id="fos_result" class="result"></p>
+  <div id="advancedMode" style="display:none">
+    <div class="input-grid">
+      <div class="input-group">
+        <label>γ (Gamma)</label>
+        <input id="gamma" placeholder="kN/m³">
+      </div>
+      <div class="input-group">
+        <label>c (Kohesi)</label>
+        <input id="c" placeholder="kPa">
+      </div>
+      <div class="input-group">
+        <label>φ (Phi)</label>
+        <input id="phi" placeholder="derajat">
+      </div>
+      <div class="input-group">
+        <label>H (Tinggi)</label>
+        <input id="H_slope" placeholder="m">
+      </div>
+      <div class="input-group">
+        <label>α (Alpha)</label>
+        <input id="alpha" placeholder="derajat">
+      </div>
+    </div>
+  </div>
+
+  <button class="btn-calc" onclick="calcFoS()">Hitung</button>
+  <div id="fos_result" class="result-box" style="display:none"></div>
+
+  <div class="chart-container">
+    <canvas id="chartFS"></canvas>
+  </div>
 </div>
 
 <!-- SENSITIVITY -->
 <div id="analysis" class="card">
-<h2> Sensitivity Analysis</h2>
-
-<h3>For Rock Blasting</h3>
-<input id="base_blasting" placeholder="Nilai Awal">
-<button onclick="simulateBlasting()">Simulasi ±10%</button>
-<p id="sim_result_blasting" class="result"></p>
-
-<h3>For Slope Stability</h3>
-<input id="base_slope" placeholder="Nilai Awal">
-<button onclick="simulateSlope()">Simulasi ±10%</button>
-<p id="sim_result_slope" class="result"></p>
+  <h2>Sensitivity Analysis</h2>
+  <div class="input-grid">
+    <div class="input-group">
+      <label>Nilai Awal</label>
+      <input id="base" placeholder="masukkan nilai">
+    </div>
+  </div>
+  <button class="btn-calc" onclick="simulate()">Simulasi ±10%</button>
+  <div id="sim_result" class="result-box" style="display:none"></div>
 </div>
 
 <!-- HISTORY -->
 <div id="history" class="card">
-<h2> History</h2>
-<ul id="history_list"></ul>
+  <h2>Calculation History</h2>
+  <ul id="history_list" class="history-list"></ul>
 </div>
 
 <script>
+let chart;
+
 function show(menu){
- document.querySelectorAll('.card').forEach(c=>c.classList.remove('active'));
- document.getElementById(menu).classList.add('active');
+  document.querySelectorAll('.card').forEach(c=>c.classList.remove('active'));
+  document.getElementById(menu).classList.add('active');
+  document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('active'));
+  document.getElementById('btn-'+menu).classList.add('active');
 }
 
 function valid(a){return !isNaN(a)&&a>0}
+function format(n){return n.toFixed(2).replace('.',',')}
 
 function save(text){
- let data=JSON.parse(localStorage.getItem('his')||"[]");
- data.push(text);
- localStorage.setItem('his',JSON.stringify(data));
- render();
+  let data=JSON.parse(localStorage.getItem('his')||"[]");
+  data.push(text);
+  localStorage.setItem('his',JSON.stringify(data));
+  render();
 }
 
 function render(){
- let data=JSON.parse(localStorage.getItem('his')||"[]");
- history_list.innerHTML="";
- data.forEach(x=>{
- let li=document.createElement('li');
- li.innerText=x;
- history_list.appendChild(li);
- });
+  let data=JSON.parse(localStorage.getItem('his')||"[]");
+  history_list.innerHTML="";
+  data.forEach(x=>{
+    let li=document.createElement('li');
+    li.innerText=x;
+    history_list.appendChild(li);
+  });
 }
 
-function calcPF(){
- let w=parseFloat(pf_w.value),v=parseFloat(pf_v.value);
- if(!valid(w)||!valid(v)) return pf_result.innerText="Input salah";
- let pf=w/v;
- let msg="";
- if(pf<0.5) msg="⚠️ Fragmentasi kasar";
- else if(pf>1.2) msg="⚠️ Boros & getaran tinggi";
- else msg="✅ Optimal";
- pf_result.innerText=`PF=${pf.toFixed(2)} ${msg}`;
- save(`PF ${pf.toFixed(2)} ${msg}`);
+function showResult(el,text){
+  el.style.display='block';
+  el.innerHTML=text;
 }
 
-function calcPPV(){
- let D=parseFloat(ppv_d.value),W=parseFloat(ppv_w.value),k=parseFloat(ppv_k.value),n=parseFloat(ppv_n.value);
- if(!valid(D)||!valid(W)||!valid(k)||!valid(n)) return ppv_result.innerText="Input salah";
- let val=k*Math.pow(D/Math.sqrt(W),-n);
- let msg=val>10?"⚠️ Berbahaya untuk struktur":"✅ Aman";
- ppv_result.innerText=`PPV=${val.toFixed(2)} ${msg}`;
- save(`PPV ${val.toFixed(2)} ${msg}`);
+/* BLASTING */
+function calcBlastFull(){
+  let H=parseFloat(H_blast.value);
+  let Dv=parseFloat(D.value)/1000;
+  let Bv=parseFloat(B.value);
+  let Sv=parseFloat(S.value);
+  let Lv=parseFloat(L.value);
+  let Tv=parseFloat(T.value);
+  let densv=parseFloat(dens.value)*1000;
+  let hole=parseFloat(holes.value);
+
+  if(!valid(H)||!valid(Dv)||!valid(Bv)||!valid(Sv)||!valid(Lv)||!valid(Tv)||!valid(densv)||!valid(hole)){
+    return showResult(blast_result,'<span style="color:var(--red)">⚠ Input tidak lengkap</span>');
+  }
+
+  let chargeLength=Lv-Tv;
+  let volumeHole=Math.PI*Math.pow(Dv/2,2)*chargeLength;
+  let chargePerHole=volumeHole*densv;
+  let totalCharge=chargePerHole*hole;
+  let rockVolume=Bv*Sv*H*hole;
+  let pf=totalCharge/rockVolume;
+
+  let badgeClass=pf<0.5?'badge-danger':pf>1.2?'badge-critical':'badge-optimal';
+  let msg=pf<0.5?'PF RENDAH':pf>1.2?'PF TINGGI':'PF OPTIMAL';
+
+  showResult(blast_result,`
+    <div style="display:flex;flex-wrap:wrap;gap:20px;margin-bottom:10px">
+      <div><span style="color:var(--text-secondary)">TOTAL CHARGE</span><br><span style="font-size:1.3rem;color:var(--accent)">${format(totalCharge)} kg</span></div>
+      <div><span style="color:var(--text-secondary)">POWER FACTOR</span><br><span style="font-size:1.3rem;color:var(--accent)">${format(pf)}</span></div>
+      <div><span class="badge ${badgeClass}">${msg}</span></div>
+    </div>
+  `);
+  save(`Blast PF ${format(pf)} ${msg}`);
 }
+
+/* FS RUMUS */
+function hitungFSRumus(){
+  let g=parseFloat(fs_gamma.value);
+  let c=parseFloat(fs_c.value);
+  let p=parseFloat(fs_phi.value);
+  let H=parseFloat(fs_H.value);
+  let a=parseFloat(fs_alpha.value);
+
+  if(isNaN(g)||isNaN(c)||isNaN(p)||isNaN(H)||isNaN(a)){
+    return showResult(fs_rumus_result,'<span style="color:var(--red)">⚠ Input tidak lengkap</span>');
+  }
+
+  let pr=p*Math.PI/180;
+  let ar=a*Math.PI/180;
+
+  let FS=(c/(g*H*Math.pow(Math.cos(ar),2)*Math.tan(ar)))+
+         (Math.tan(pr)/Math.tan(ar));
+
+  let badgeClass=FS>1.5?'badge-safe':FS>=1?'badge-critical':'badge-danger';
+  let msg=FS>1.5?'AMAN':FS>=1?'KRITIS':'BERBAHAYA';
+
+  showResult(fs_rumus_result,`
+    <div style="display:flex;align-items:center;gap:15px">
+      <div><span style="color:var(--text-secondary)">FACTOR OF SAFETY</span><br><span style="font-size:1.5rem;color:var(--accent)">${format(FS)}</span></div>
+      <span class="badge ${badgeClass}">${msg}</span>
+    </div>
+  `);
+  save(`FS Rumus ${format(FS)} ${msg}`);
+}
+
+/* SLOPE */
+mode.addEventListener("change",()=>{
+  simpleMode.style.display=mode.value==="simple"?"block":"none";
+  advancedMode.style.display=mode.value==="advanced"?"block":"none";
+});
 
 function calcFoS(){
- let r=parseFloat(fos_r.value),d=parseFloat(fos_d.value);
- let faktor=parseFloat(kondisi.value);
- if(!valid(r)||!valid(d)) return fos_result.innerText="Input salah";
- let fos=(r/d)*faktor;
- let msg="";
- if(fos<1) msg="❌ Tidak stabil (STOP)";
- else if(fos<1.3) msg="⚠️ Kritis";
- else msg="✅ Aman";
- fos_result.innerText=`FoS=${fos.toFixed(2)} ${msg}`;
- save(`FoS ${fos.toFixed(2)} ${msg}`);
+  if(mode.value==="simple"){
+    let r=parseFloat(fos_r.value),d=parseFloat(fos_d.value);
+    if(!valid(r)||!valid(d)) return showResult(fos_result,'<span style="color:var(--red)">⚠ Input salah</span>');
+    tampilkan(r/d,"FoS Simple");
+  }else{
+    let g=parseFloat(gamma.value);
+    let cVal=parseFloat(c.value);
+    let p=parseFloat(phi.value);
+    let H=parseFloat(H_slope.value);
+    let a=parseFloat(alpha.value);
+
+    if(!valid(g)||!valid(H)||isNaN(cVal)||isNaN(p)||isNaN(a)){
+      return showResult(fos_result,'<span style="color:var(--red)">⚠ Input tidak lengkap</span>');
+    }
+
+    let pr=p*Math.PI/180;
+    let ar=a*Math.PI/180;
+
+    let FS=(cVal/(g*H*Math.pow(Math.cos(ar),2)*Math.tan(ar)))+
+           (Math.tan(pr)/Math.tan(ar));
+
+    tampilkan(FS,"FoS Advanced");
+    grafikFS(g,cVal,p,H,a);
+  }
 }
 
-function simulateBlasting(){
- let baseVal=parseFloat(base_blasting.value);
- if(!valid(baseVal)) return sim_result_blasting.innerText="Input salah";
- let up=baseVal*1.1;
- let down=baseVal*0.9;
- sim_result_blasting.innerText=`-10%=${down.toFixed(2)}, +10%=${up.toFixed(2)}`;
+function tampilkan(fos,label){
+  let badgeClass=fos<1?'badge-danger':fos<1.3?'badge-critical':'badge-safe';
+  let msg=fos<1?'TIDAK STABIL':fos<1.3?'KRITIS':'AMAN';
+  showResult(fos_result,`
+    <div style="display:flex;align-items:center;gap:15px">
+      <div><span style="color:var(--text-secondary)">${label.toUpperCase()}</span><br><span style="font-size:1.5rem;color:var(--accent)">${format(fos)}</span></div>
+      <span class="badge ${badgeClass}">${msg}</span>
+    </div>
+  `);
+  save(`${label} ${format(fos)} ${msg}`);
 }
 
-function simulateSlope(){
- let baseVal=parseFloat(base_slope.value);
- if(!valid(baseVal)) return sim_result_slope.innerText="Input salah";
- let up=baseVal*1.1;
- let down=baseVal*0.9;
- sim_result_slope.innerText=`-10%=${down.toFixed(2)}, +10%=${up.toFixed(2)}`;
+function grafikFS(g,c,p,H,aInput){
+  let pr=p*Math.PI/180;
+  let labels=[],data=[];
+
+  for(let x=1;x<=60;x++){
+    let ar=x*Math.PI/180;
+    let FS=(c/(g*H*Math.pow(Math.cos(ar),2)*Math.tan(ar)))+
+           (Math.tan(pr)/Math.tan(ar));
+    labels.push(x);
+    data.push(FS);
+  }
+
+  if(chart) chart.destroy();
+
+  chart=new Chart(document.getElementById("chartFS"),{
+    type:'line',
+    data:{
+      labels:labels,
+      datasets:[
+        {
+          label:'FS vs α',
+          data:data,
+          borderColor:'#06b6d4',
+          backgroundColor:'rgba(6,182,212,0.1)',
+          borderWidth:2,
+          tension:0.4,
+          pointRadius:0,
+          fill:true
+        },
+        {
+          label:'Input',
+          data:labels.map(x=>x===Math.round(aInput)?data[x-1]:null),
+          borderColor:'#f59e0b',
+          backgroundColor:'#f59e0b',
+          borderWidth:0,
+          pointRadius:6,
+          pointHoverRadius:8,
+          type:'scatter'
+        }
+      ]
+    },
+    options:{
+      responsive:true,
+      maintainAspectRatio:true,
+      plugins:{
+        legend:{
+          labels:{
+            color:'#94a3b8',
+            font:{family:'Rajdhani',size:12}
+          }
+        }
+      },
+      scales:{
+        x:{
+          grid:{color:'#1e293b'},
+          ticks:{color:'#94a3b8',font:{family:'Share Tech Mono'}}
+        },
+        y:{
+          grid:{color:'#1e293b'},
+          ticks:{color:'#94a3b8',font:{family:'Share Tech Mono'}}
+        }
+      }
+    }
+  });
+}
+
+/* SENSITIVITY */
+function simulate(){
+  let b=parseFloat(base.value);
+  if(!valid(b)) return showResult(sim_result,'<span style="color:var(--red)">⚠ Input salah</span>');
+  showResult(sim_result,`
+    <div style="display:flex;gap:30px">
+      <div><span style="color:var(--red)">▼ -10%</span><br><span style="font-size:1.3rem">${format(b*0.9)}</span></div>
+      <div><span style="color:var(--text-secondary)">BASE</span><br><span style="font-size:1.3rem;color:var(--accent)">${format(b)}</span></div>
+      <div><span style="color:var(--green)">▲ +10%</span><br><span style="font-size:1.3rem">${format(b*1.1)}</span></div>
+    </div>
+  `);
 }
 
 render();
@@ -175,3 +810,4 @@ render();
 
 </body>
 </html>
+
